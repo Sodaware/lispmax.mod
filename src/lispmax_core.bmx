@@ -132,7 +132,8 @@ Type LispMax
 	''' </summary>
 	Method bindCurrentArguments()
 		
-		If Self._stack = Null Then Throw "NULL STACK"
+		' Check the stack is valid
+		If Self._stack = Null Then Throw New LispMax_NullStackException
 		
 		' If body still has items left, get the next one
 		If Not(Self._stack._body.isNil()) Then
@@ -154,8 +155,8 @@ Type LispMax
 		body	  = op.cdr()
 		
 		' Update stack pointer
-		Self._stack._environment	= Self._environment
-		Self._stack._body		  = body
+		Self._stack._environment = Self._environment
+		Self._stack._body        = body
 		
 		Local isFinished:Byte = False
 

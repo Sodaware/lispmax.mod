@@ -1,6 +1,24 @@
+' ------------------------------------------------------------------------------
+' -- src/lispmax_exceptions.bmx
+' -- 
+' -- All exceptions that can be thrown during execution.
+' ------------------------------------------------------------------------------
+
+
 SuperStrict
 
-Type Lispmax_SyntaxErrorException Extends TBlitzException
+''' <summary>Base exception that LispMax will throw</summary>
+Type LispMax_Exception Extends TBlitzException
+End Type
+
+Type LispMax_NullStackException Extends LispMax_Exception
+	Method ToString:String()
+		Return "Null stack during execution"
+	End Method
+End Type
+
+''' <summary>Syntax error in execution.</summary>
+Type LispMax_SyntaxErrorException Extends LispMax_Exception
 
 	Field _message:String
 
@@ -16,7 +34,7 @@ Type Lispmax_SyntaxErrorException Extends TBlitzException
 	End Method
 End Type
 
-Type Lispmax_UnboundSymbolException Extends TBlitzException
+Type LispMax_UnboundSymbolException Extends LispMax_Exception
 
 	Field _symbol:String
 	
@@ -32,13 +50,13 @@ Type Lispmax_UnboundSymbolException Extends TBlitzException
 
 End Type
 
-Type Lispmax_ArgumentException Extends TBlitzException
+Type LispMax_ArgumentException Extends LispMax_Exception
 	Method ToString:String()
 		Return "A list expression was shorter or longer than expected"
 	End Method
 End Type
 
-Type Lispmax_UnexpectedTypeException Extends TBlitzException
+Type LispMax_UnexpectedTypeException Extends LispMax_Exception
 	
 	field _source:String
 	field _arg:String
@@ -68,7 +86,7 @@ Type Lispmax_UnexpectedTypeException Extends TBlitzException
 	
 End Type
 
-Type Lispmax_MissingArgumentException Extends TBlitzException
+Type LispMax_MissingArgumentException Extends LispMax_Exception
 	
 	field _source:String
 	field _arg:String
