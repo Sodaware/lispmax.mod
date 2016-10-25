@@ -24,8 +24,12 @@
 
 ;; Defining things
 
+;;;
+;; Define a new function with a docstring.
 (defmacro (defun name args docstring &rest body)
-  `(define (,name ,@args) ,@body))
+  (if (pair? args)
+      `(define (,name ,@args) ,@body)
+      `(define (,name) ,@body)))
 
 
 ;; Core Logic Helpers
