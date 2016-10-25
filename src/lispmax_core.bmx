@@ -1,7 +1,8 @@
 ' ------------------------------------------------------------------------------
 ' -- lispmax_core.bmx
 ' -- 
-' -- The core of lispmax. 
+' -- The core of lispmax. Contains the main LispMax type which contains a lisp
+' -- environment, execution stack and a symbol table.
 ' ------------------------------------------------------------------------------
 
 
@@ -46,12 +47,16 @@ Type LispMax
 	' -- Helpers
 	' ----------------------------------------------------------------------
 	
-	Method addFunction(name:String, callback:Lispmax_Callable)
-		
-		' [todo] - Check arguments here
-		
+	''' <summary>
+	''' Add an executable function to the Lisp environment. Adds the function
+	''' as NAME that will execute the code in CALLBACK when called.
+	''' </summary>
+	''' <seealso="Lispmax_Callable">Base callable object.</seealso>
+	''' <param name="name">The name of the function to add.</param>
+	''' <param name="callback">A callable object to execute.</param>
+	Method addFunction(name:String, callback:Lispmax_Callable)		
+		Assert callback, "Invalid function passed to `addFunction`"
 		Self._environment.set(Self.makeSymbol(name), Self.makeCallable(callback))
-		
 	End Method
 	
 	
@@ -59,6 +64,7 @@ Type LispMax
 	' -- Querying
 	' ----------------------------------------------------------------------
 	
+	''' <summary>Get the result from the last expression executed.</summary>
 	Method getResult:LispMax_Atom()
 		Return Self._result
 	End Method
@@ -104,7 +110,7 @@ Type LispMax
 	Method moveToNextExpression()
 		
 		' Update the current environment and get the body
-		Self._environment	  = Self._stack._environment
+		Self._environment       = Self._stack._environment
 		Local body:LispMax_Atom = Self._stack._body.copy()
 		
 		' Update the current expression to match next body exp
@@ -126,7 +132,6 @@ Type LispMax
 	''' </summary>
 	Method bindCurrentArguments()
 		
-		'DebugLog "doBind"
 		If Self._stack = Null Then Throw "NULL STACK"
 		
 		' If body still has items left, get the next one
@@ -151,12 +156,6 @@ Type LispMax
 		' Update stack pointer
 		Self._stack._environment	= Self._environment
 		Self._stack._body		  = body
-		
-		' BINDING
-'	  DebugLog "OP	  : " + Self.expressionToString(op)
-'	  DebugLog "ARG_NAMES  : " + Self.expressionToString(arg_names)
-'	  DebugLog "ARG_VALUES : " + Self.expressionToString(args)
-'	  DebugLog "BODY	  : " + Self.expressionToString(body)
 		
 		Local isFinished:Byte = False
 
@@ -291,9 +290,6 @@ Type LispMax
 		Local op:LispMax_Atom   = Self._stack._op
 		Local args:LispMax_Atom = Self._stack._args
 		
-		'DebugLog "doApply::op   => " + Self.expressionToString(op)
-		'DebugLog "doApply::args => " + Self.expressionToString(args)
-		
 		' Reverse order of args to evaluate
 		If args.isNil() = False Then
 			args = Self.listReverse(args)
@@ -330,22 +326,14 @@ Type LispMax
 		
 		' Run built in expressions
 		If op.atom_type = LispMax_Atom.ATOM_TYPE_BUILTIN Then
-			'DebugLog "Running builtin!"
 			Self._stack   = Self._stack._parent
 			Self._expression = Self.cons(op, args)
-			'Self._result   = Self._expression
-			
-			'DebugLog "doApply::returning -- ran builtin"
 			Return
 		ElseIf op.atom_type <> LispMax_Atom.ATOM_TYPE_CLOSURE Then
 			Throw Lispmax_UnexpectedTypeException.Create(op.value_symbol, LispMax_Atom.atom_type_closure, op.atom_type)
 		End If
 		
 		Self.bindCurrentArguments()
-		
-		'Return Self._result
-		
-		'DebugLog "doApply::returning"
 		
 	End Method
 	
@@ -366,18 +354,12 @@ Type LispMax
 		
 		' Ignore result if this is not the last expression
 		If body.isNil() = False Then
-			'DebugLog "this is not the last expression"
 			Self.doApply()
 			Return Self._result
 		EndIf
 		
-		'DebugLog "doReturn::op   => " + Self.expressionToString(op)
-		'DebugLog "doReturn::args => " + Self.expressionToString(args)
-		
 		' Finished!
 		If op.isNil() Then
-
-			'DebugLog "  finished evaluating operator"
 			
 			op = Self._result
 			Self._stack._op = op
@@ -410,9 +392,7 @@ Type LispMax
 			select op.special_symbol
 
 				case LispMax_Atom.SYMBOL_DEFINE
-				
-					'DebugLog "Defining : " + Self.expressionToString(Self._stack._args) + " => " + self.expressionToString(self._result)
-
+					
 					Local symbol:Lispmax_Atom = Self._stack._args
 					Self._environment.set(symbol, Self._result)
 					
@@ -420,12 +400,9 @@ Type LispMax
 					self._stack = Self._stack._parent
 					Self._expression = Self.cons(Self.makeSymbol("QUOTE"), Self.cons(symbol, Self.makeNil()))
 					
-					'DebugLog "doReturn::returning"
 					Return Self._result
 					
 				case Lispmax_Atom.SYMBOL_IF
-			
-					'DebugLog "IF"
 								
 					args = Self._stack._tail
 					
@@ -437,10 +414,7 @@ Type LispMax
 							
 					Self._stack = Self._stack._parent
 					
-					'DebugLog "doReturn::returning"
 					Return Self._result
-				
-				'case LispMax_Atom.SYMBOL_PROGN
 				
 				Default
 
@@ -454,14 +428,10 @@ Type LispMax
 			Self._expression = Self._result
 			Self._stack = Self._stack._parent
 			
-			'DebugLog "doReturn::returning -- isMacro"
 			Return Self._result
 			
 		Else
-		
-			'DebugLog "Storing arg: " + Self.expressionToString(Self._result)
 			args = Self.storeArg(Self._result)
-			
 		EndIf 
 		
 		args = Self._stack._tail
@@ -469,7 +439,6 @@ Type LispMax
 		' Check if anything is left to evaluate
 		If args.isNil() Then
 			Self.doApply()
-			'DebugLog "doReturn::returning -- args.isNil"
 			Return Self._result
 		End If
 		
@@ -477,10 +446,6 @@ Type LispMax
 		Self._expression	= args.car()
 		Self._stack._tail   = args.cdr()
 		
-		'DebugLog "next: " + Self.expressionToString(Self._expression)
-		'DebugLog "tail: " + Self.expressionToString(Self._stack._tail)
-		
-		'DebugLog "doReturn::returning - got next expression"
 		Return Self._result
 		
 	End Method  
@@ -544,7 +509,6 @@ Type LispMax
 			
 			' Set current result to the symbol's value
 			Self._result = Self._environment.get(Self._expression)
-			'DebugLog "GOT SYMBOL VALUE: " + Self.expressionToString(Self._result)
 			
 		ElseIf Self._expression.atom_type <> LispMax_Atom.ATOM_TYPE_PAIR Then
 			
@@ -561,10 +525,6 @@ Type LispMax
 				
 			' Check for special atoms
 			If op.isSymbolAtom() Then
-				
-				'DebugLog "SYMBOL EXPRESSION!"
-				'DebugLog "  op   : " + Self.expressionToString(op)
-				'DebugLog "  args : " + Self.expressionToString(args)
 				
 				Select op.special_symbol
 					
@@ -596,21 +556,11 @@ Type LispMax
 								Throw New Lispmax_UnexpectedTypeException
 							End If
 							
-							'DebugLog "DEFINED FUNCTION: " + Self.expressionToString(sym)
-							
 							Self._environment.set(sym, val)
 							
 							Self._result = sym
 							
 						ElseIf sym.isAtomType(LispMax_Atom.ATOM_TYPE_SYMBOL) Then
-							
-							'DebugLog "DEFINE: " + Self.expressionToString(args)
-							
-							'DebugLog "CAR: " + Self.expressionToString(args.car())
-							
-							'If args.cdr().cdr().isNil() Then
-							'   Throw New Lispmax_ArgumentException
-							'End If
 							
 							' Enter the new stack
 							Self._stack = LispMax_StackFrame.Create(Self._stack, Self._environment, LispMax.makeNil())
@@ -632,9 +582,9 @@ Type LispMax
 							Self._result = Self.makeNil()
 						Else
 							
-							Self._stack	  = LispMax_StackFrame.Create(Self._stack, Self._environment, Self.makeNil())
-							Self._stack._op  = Self.makeClosure(Self._environment, Self.makeNil(), args.car())
-							Self._stack._body   = Self.makeClosure(Self._environment, Self.makeNil(), args)
+							Self._stack	      = LispMax_StackFrame.Create(Self._stack, Self._environment, Self.makeNil())
+							Self._stack._op   = Self.makeClosure(Self._environment, Self.makeNil(), args.car())
+							Self._stack._body = Self.makeClosure(Self._environment, Self.makeNil(), args)
 									
 						End If
 						
@@ -647,8 +597,6 @@ Type LispMax
 						Self._result = LispMax.makeClosure(Self._environment, args.car(), args.cdr())
 						
 					Case LispMax_Atom.SYMBOL_IF
-						
-						'DebugLog "evaluateExpression: IF"
 					
 						' Check there is a condition, a true expression and a false expression
 						If args.isNil() Or args.cdr().isNil() Or args.cdr().cdr().isNil() Or Not(args.cdr().cdr().cdr().isNil()) Then
@@ -708,7 +656,6 @@ Type LispMax
 						
 					Default
 						
-						'DebugLog "Not a special form, so pushing to the stack!"
 						Self._stack = LispMax_StackFrame.Create(Self._stack, Self._environment, args)
 						Self._expression = op
 						
@@ -717,15 +664,11 @@ Type LispMax
 				End Select
 					
 			ElseIf op.atom_type = LispMax_Atom.ATOM_TYPE_BUILTIN Then
-					
-				'DebugLog "operator is a builtin - calling"
 				Self._result = op.value_builtin.call(Self, args)
-			
 			Else
 				
 				' Handle function application
 				
-				'DebugLog "Pushing to stack"
 					
 				' Push to stack
 				Self._stack = LispMax_StackFrame.Create(Self._stack, Self._environment, args)
