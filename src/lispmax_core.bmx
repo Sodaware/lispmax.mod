@@ -103,8 +103,6 @@ Type LispMax
 	''' <summary>Set the expression to an expression on the current stack.</summary>
 	Method moveToNextExpression()
 		
-		'DebugLog "doExec"
-		
 		' Update the current environment and get the body
 		Self._environment	  = Self._stack._environment
 		Local body:LispMax_Atom = Self._stack._body.copy()
@@ -113,17 +111,12 @@ Type LispMax
 		Self._expression		= body.car()
 		body					= body.cdr()
 		
-		'DebugLog "Moved to expression : " + Self.expressionToString(Self._expression)
-		'DebugLog "Remaining body	 : " + Self.expressionToString(body)
-		
 		' If no body expressions left, pop
 		If body.isNil() Then
 			Self._stack = Self._stack._parent
 		Else
 			Self._stack._body = body
 		End If
-		
-		'DebugLog "doExec::returning"
 		
 	End Method
 	
@@ -153,7 +146,7 @@ Type LispMax
 		
 		' Get arg names
 		arg_names = op.car()
-		body	  = op.cdr()'.car()
+		body	  = op.cdr()
 		
 		' Update stack pointer
 		Self._stack._environment	= Self._environment
@@ -283,7 +276,6 @@ Type LispMax
 		' Execute
 		Self.moveToNextExpression()
 		
-		'DebugLog "doBind::returning"
 		Return
 		
 	End Method
@@ -304,7 +296,6 @@ Type LispMax
 		
 		' Reverse order of args to evaluate
 		If args.isNil() = False Then
-			'DebugLog "REVERSED ARGS"
 			args = Self.listReverse(args)
 			Self._stack._args = args
 		End If
@@ -314,14 +305,14 @@ Type LispMax
 			
 			If op.value_symbol = "APPLY" Then
 				
-			debuglog "Applying"
+				' debuglog "Applying"
 			
 				' Replace the current frame
 				Self._stack = Self._stack._parent
 				Self._stack = LispMax_StackFrame.Create(Self._stack, Self._environment, Self.makeNil())
 				
 				' Get operator / args from apply
-				op = args.car()
+				op   = args.car()
 				args = args.cdr().car()
 				
 				' If args is not a list, bad
@@ -347,7 +338,7 @@ Type LispMax
 			'DebugLog "doApply::returning -- ran builtin"
 			Return
 		ElseIf op.atom_type <> LispMax_Atom.ATOM_TYPE_CLOSURE Then
-			throw Lispmax_UnexpectedTypeException.Create(op.value_symbol, Lispmax_Atom.atom_type_closure, op.atom_type)
+			Throw Lispmax_UnexpectedTypeException.Create(op.value_symbol, LispMax_Atom.atom_type_closure, op.atom_type)
 		End If
 		
 		Self.bindCurrentArguments()
@@ -396,10 +387,10 @@ Type LispMax
 				
 				' Copy the macro Atom
 				local macro:LispMax_Atom = op.copy()
-
+				
 				' Turn it into something executable
 				macro.atom_type = LispMax_Atom.ATOM_TYPE_CLOSURE
-
+				
 				' Set macro args
 				args = Self._stack._tail
 				
@@ -409,8 +400,6 @@ Type LispMax
 				Self._stack._args = args
 				
 				Self.bindCurrentArguments()
-				
-				'DebugLog "doReturn::returning"
 				
 				Return Self._result
 				
@@ -502,7 +491,7 @@ Type LispMax
 	' ----------------------------------------------------------------------
 	
 	''' <summary>
-	''' Main method. Evaluates an expression within an environment and returns
+	''' Evaluates a parser expression atom within an environment and returns
 	''' the resulting atom.
 	''' </summary>
 	''' <param name="expression">The expression to evaluate.</param>
@@ -536,11 +525,14 @@ Type LispMax
 		
 		' Check for symbols
 		If Self._expression.atom_type = LispMax_Atom.ATOM_TYPE_SYMBOL Then
+
+			' [todo] - Can we re-order this to now check for a colon? 
+			' -- Get the symbol, but if not set AND it's :symbol then set it
 			
 			' Check if the symbol starts with ":", which should evaluate to itself
 			If Self._expression.value_symbol[0] = ASC_COLON Then
 				
-				' [todo] - Try and do this without throwing exceptions
+				' [todo] - Try and do this without throwing exceptions (use getOrSet to do this)
 				Try 
 					Self._result = Self._environment.get(Self._expression)
 				Catch e:Lispmax_UnboundSymbolException
@@ -559,13 +551,13 @@ Type LispMax
 			Self._result = Self._expression
 			
 		ElseIf Self._expression.isList() = False Then
-				
+			' [todo] - Include some extra information here
 			Throw New Lispmax_SyntaxErrorException
 			
 		Else
 			
-			Local op:LispMax_Atom	  = Self._expression.car()
-			Local args:LispMax_Atom  = Self._expression.cdr()
+			Local op:Lispmax_Atom   = Self._expression.car()
+			Local args:Lispmax_Atom = Self._expression.cdr()
 				
 			' Check for special atoms
 			If op.isSymbolAtom() Then
@@ -709,6 +701,7 @@ Type LispMax
 						Return False
 						
 					Case LispMax_Atom.SYMBOL_SUSPEND
+						
 						Self.stopProcess()
 						Self.moveToNextExpression()
 						Return False
@@ -766,10 +759,10 @@ Type LispMax
 		' Open the url, read all contents and close
 		Local streamIn:TStream = ReadFile(url)
 
-		if streamIn = null then
-			throw "Could not open stream: " + url.toString()
+		If streamIn = Null Then
+			Throw "Could not open stream: " + url.toString()
 		End If
-
+		
 		Local content:String = Self.readAll(streamIn)
 		streamIn.Close()
 		
@@ -799,7 +792,8 @@ Type LispMax
 		Return contents
 		
 	End Method
-
+	
+	
 	' ----------------------------------------------------------------------
 	' -- Parsing
 	' ----------------------------------------------------------------------
@@ -891,12 +885,12 @@ Type LispMax
 	Method readList:LispMax_Atom()
 
 		' Create an atom
-		local expression:LispMax_Atom = new LispMax_Atom
+		Local expression:LispMax_Atom = LispMax.makeAtom()
 		Local endOfList:LispMax_Atom  = Null
 
 		' Keep reading until we reach the end of the list a ')' symbol
 		Repeat
-			
+
 			' Get the current token
 			Local token:LispMax_Token = Self._lexer.readToken()
 
@@ -910,18 +904,18 @@ Type LispMax
 
 				If expression.isNil() Then
 					Throw New Lispmax_SyntaxErrorException
-				endif
-				
+				EndIf
+
 				' Read the next expression to create the pair
-				Local nextExpression:LispMax_Atom = self.readExpression()
+				Local nextExpression:LispMax_Atom = Self.readExpression()
 				expression.cdr(nextExpression)
 
 				' Read the next token
-				local nextToken:Lispmax_Token = self._lexer.readToken()
-				if nextToken.tokenType <> Lispmax_Token.TOKEN_CLOSE_PAREN then
+				Local nextToken:Lispmax_Token = Self._lexer.readToken()
+				If nextToken.tokenType <> LispMax_Token.TOKEN_CLOSE_PAREN Then
 					Throw New Lispmax_SyntaxErrorException
-				endif
-				
+				EndIf
+
 				Return expression
 
 			endif
@@ -929,9 +923,9 @@ Type LispMax
 			Local nextExpression:LispMax_Atom = self.readExpression(token)
 
 			' If it's nil, which it shouldn't be///
-			if nextExpression.isNil() Then
+			If nextExpression.isNil() Then
 				expression = LispMax.cons(nextExpression, LispMax.makeNil())
-			endif
+			EndIf
 
 			' Initial value goes at the start of the list
 			If expression.car() = null then
@@ -939,11 +933,11 @@ Type LispMax
 			Else
 				
 				' Push to end
-				if endOfList = null then
+				If endOfList = Null Then
 					endOfList = expression.cdr(LispMax.cons(nextExpression, LispMax.makeNil()))
 				Else
 					endOfList = endOfList.cdr(LispMax.cons(nextExpression, LispMax.makeNil()))
-				endif
+				EndIf
 
 			End If
 			
@@ -989,7 +983,7 @@ Type LispMax
 				Return Self.makeString(token.contents)
 				
 			Default
-				Throw New LispMax_SyntaxErrorException
+				Throw Lispmax_SyntaxErrorException.Create("Unexpected/Unknown token during parse: " + token.contents)
 			
 		End Select
 		
@@ -1006,79 +1000,22 @@ Type LispMax
 		Return LispMax.cons(parent, LispMax.makeNil())
 	End Method
 	
-
-
-	rem
-	
-	Method getEnvironmentValue:LispMax_Atom(env:LispMax_Atom, symbol:LispMax_Atom)
-	
-		' [todo] - Speed this up
-		
-		Local parent:LispMax_Atom   = env.car()
-		Local bs:Lispmax_Atom	  = env.cdr()
-		
-		While bs.isNil() = False
-			
-			Local b:LispMax_Atom = bs.car()
-			If (b.car().value_symbol = symbol.value_symbol) Then
-				Return b.cdr()
-			End If
-			
-			bs = bs.cdr()
-		
-		Wend
-		
-		If parent.isNil() Then
-			Throw Lispmax_UnboundSymbolException.Create(symbol.value_symbol)
-		End If
-		
-		Return Self.getEnvironmentValue(parent, symbol)
-		
-	End Method
-	
-	End rem
-	
 	Method getEnvironmentValue:LispMax_Atom(env:LispMax_Environment, symbol:LispMax_Atom)
 		Return env.get(symbol)
 	End Method
-
 	
 	Method setEnvironmentValue(env:Lispmax_Environment, symbol:LispMax_Atom, value:LispMax_Atom)
 		env.set(symbol, value)
 	End Method
 	
-	rem
-	Method setEnvironmentValue(env:LispMax_Atom, symbol:LispMax_Atom, value:LispMax_Atom)
-
-		Local bs:Lispmax_Atom	  = env.cdr()
-		Local b:LispMax_Atom		= LispMax.makeNil()
-		
-		While bs.isNil() = False
-			
-			b = bs.car()
-			
-			If (b.car().value_symbol = symbol.value_symbol) Then
-				b.cdr(value)
-				Return
-			End If
-			
-			bs = bs.cdr()
-		
-		Wend
-		
-		b = LispMax.cons(symbol, value)
-		env.cdr(LispMax.cons(b, env.cdr()))
-		
-	End Method
-	end rem
-	
+	''
+	' Dump the contents of the 
 	Method dumpEnvironment:String(env:Lispmax_Atom)
 		Self.printExpression(env)
 	End Method
-
-		
+	
 	Function getGlobalSymbol:LispMax_Atom(name:String)
-		Local a:LispMax_Atom = New LispMax_Atom
+		Local a:LispMax_Atom = LispMax.makeAtom()
 		a.atom_type = LispMax_Atom.ATOM_TYPE_SYMBOL
 		a.value_symbol = name.ToUpper()
 		Return a
@@ -1089,8 +1026,14 @@ Type LispMax
 	' -- Creating Atoms
 	' ----------------------------------------------------------------------
 	
+	''
+	' [todo] - Convert this to allow object pooling
+	Function makeAtom:LispMax_Atom()
+		Return New LispMax_Atom
+	End Function
+	
 	Method makeNumber:Lispmax_Atom(x:Long)
-		Local a:LispMax_Atom = New LispMax_Atom
+		Local a:LispMax_Atom = LispMax.makeAtom()
 		a.atom_type = LispMax_Atom.ATOM_TYPE_INTEGER
 		a.value_number = x
 		Return a
@@ -1100,7 +1043,7 @@ Type LispMax
 	' Creates a new cons atom
 	Function cons:LispMax_Atom(car_val:LispMax_Atom, cdr_val:LispMax_Atom)
 		
-		Local p:LispMax_atom = New LispMax_Atom
+		Local p:LispMax_atom = LispMax.makeAtom()
 		
 		p.atom_type = LispMax_Atom.ATOM_TYPE_PAIR
 		p.value_pair.atom[0] = car_val
@@ -1113,21 +1056,21 @@ Type LispMax
 	''
 	' Create an integer atom
 	Function MakeInt:LispMax_Atom(x:Long)
-		Local a:LispMax_Atom = New LispMax_Atom
+		Local a:LispMax_Atom = LispMax.makeAtom()
 		a.atom_type = LispMax_Atom.ATOM_TYPE_INTEGER
 		a.value_number = x
 		Return a
 	End Function
 	
 	Function MakeString:LispMax_Atom(x:String)
-		Local a:LispMax_Atom = New LispMax_Atom
+		Local a:LispMax_Atom = LispMax.makeAtom()
 		a.atom_type = LispMax_Atom.ATOM_TYPE_STRING
 		a.value_symbol = x
 		Return a
 	End Function
 	
 	Function makeBuiltin:LispMax_Atom(fn:LispMax_Atom(caller:LispMax, args:LispMax_Atom))
-		Local a:LispMax_Atom = New LispMax_Atom
+		Local a:LispMax_Atom = LispMax.makeAtom()
 		a.atom_type = LispMax_Atom.ATOM_TYPE_BUILTIN
 		a.value_builtin = New Lispmax_Builtin
 		Lispmax_Builtin(a.value_builtin)._handler = fn
@@ -1135,7 +1078,7 @@ Type LispMax
 	End Function
 	
 	Function makeCallable:LispMax_Atom(callback:Lispmax_Callable)
-		Local a:LispMax_Atom = New LispMax_Atom
+		Local a:LispMax_Atom = LispMax.makeAtom()
 		a.atom_type = LispMax_Atom.ATOM_TYPE_BUILTIN
 		a.value_builtin = callback
 		Return a		
@@ -1157,7 +1100,7 @@ Type LispMax
 		If a = Null Then
 			
 			' Not found - create a new one
-			a = New LispMax_Atom
+			a = LispMax.makeAtom()
 			a.atom_type = LispMax_Atom.ATOM_TYPE_SYMBOL
 			a.value_symbol = name
 			
@@ -1585,6 +1528,28 @@ Type LispMax
 		
 	End Method
 	
+	
+	' ----------------------------------------------------------------------
+	' -- Atom Helpers
+	' ----------------------------------------------------------------------
+	
+	Function GetAtomTypeAsString:String(atomType:Int)
+	
+		Select atomType
+			Case LispMax_Atom.ATOM_TYPE_INTEGER ; Return "INTEGER"
+			Case LispMax_Atom.ATOM_TYPE_SYMBOL	; Return "SYMBOL"
+			Case LispMax_Atom.ATOM_TYPE_NIL		; Return "NIL"
+			Case LispMax_Atom.ATOM_TYPE_PAIR	; Return "PAIR"
+			Case LispMax_Atom.ATOM_TYPE_BUILTIN	; Return "BUILTIN"
+			Case LispMax_Atom.ATOM_TYPE_CLOSURE	; Return "CLOSURE"
+			Case LispMax_Atom.ATOM_TYPE_MACRO	; Return "MACRO"
+			Case LispMax_Atom.ATOM_TYPE_STRING	; Return "STRING"
+			Default 							; Return "Unknown"
+		End Select
+		
+	End Function
+	
+	
 	' ----------------------------------------------------------------------
 	' -- Construction
 	' ----------------------------------------------------------------------
@@ -1618,13 +1583,19 @@ Type LispMax
 		Self._environment.set(Self.makeSymbol("APPLY"), Self.makeBuiltin(LispMax_Builtin_Apply))
 		Self._environment.set(Self.makeSymbol("LISTP"), Self.makeBuiltin(LispMax_Builtin_ListP))
 		
+		' String functions
+		Self._environment.set(Self.makeSymbol("STRING-UPCASE"), Self.makeBuiltin(LispMax_Builtin_StringUpcase))
+		Self._environment.set(Self.makeSymbol("STRING-DOWNCASE"), Self.makeBuiltin(LispMax_Builtin_StringDowncase))
+		
 		' LispMax stuff
 		Self._environment.set(Self.makeSymbol("RAND"), Self.makeBuiltin(LispMax_Builtin_Rand))
 		Self._environment.set(Self.makeSymbol("MILLISECS"), Self.makeBuiltin(LispMax_Builtin_Millisecs))
 		Self._environment.set(Self.makeSymbol("PARSE-INTEGER"), Self.makeBuiltin(LispMax_Builtin_ParseInteger))
 		
 		' Standard IO
+		Self._environment.set(Self.makeSymbol("DEBUGLOG"), Self.makeBuiltin(LispMax_Builtin_Debuglog))
 		Self._environment.set(Self.makeSymbol("PRINT"), Self.makeBuiltin(LispMax_Builtin_Print))
+		Self._environment.set(Self.makeSymbol("PRINT-EXPRESSION"), Self.makeBuiltin(LispMax_Builtin_PrintExpression))
 		
 		' Register common symbols
 		Self._environment.set(Self.makeSymbol("T"), Self.makeSymbol("T"))
@@ -1647,7 +1618,7 @@ Type LispMax
 	
 		' [todo] - Not sure this is actually required now
 		If LispMax_Nil = Null Then
-			LispMax_Nil = New LispMax_Atom
+			LispMax_Nil = LispMax.makeAtom()
 			LispMax_Nil.atom_type = LispMax_Atom.ATOM_TYPE_NIL
 			Lispmax_Nil.value_symbol = "NIL"
 		End If

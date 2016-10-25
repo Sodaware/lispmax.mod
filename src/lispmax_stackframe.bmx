@@ -1,3 +1,8 @@
+' ------------------------------------------------------------------------------
+' -- src/lispmax_stackframe.bmx
+' -- 
+' -- Stack frames represent a single level of the execution stack.
+' ------------------------------------------------------------------------------
 
 
 Type LispMax_StackFrame
@@ -59,6 +64,7 @@ Type LispMax_StackFrame
 			Return Self.doApply(expression, environment)
 		EndIf
 		
+		' [todo] - Can this be removed?
 		If Self._op.isNil() Then
 				
 			' Finished
@@ -69,6 +75,7 @@ Type LispMax_StackFrame
 		
 	End Method
 	
+	' [todo] - Can this be removed?
 	Method doApply:LispMax_Atom(expression:LispMax_Atom, environment:LispMax_Environment)
 		
 	End Method

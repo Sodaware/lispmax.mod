@@ -57,9 +57,14 @@ Type LispMax_Environment
 		
 	End Method
 	
-
+	Method remove(symbol:LispMax_Atom)
+		Self.removeByName(symbol.value_symbol)
+	End Method
 	
-		
+	Method removeByName(symbolName:String)
+		Self._lookup.Remove(symbolName)
+	End Method
+	
 	
 	' ----------------------------------------------------------------------
 	' -- Copying
@@ -72,11 +77,38 @@ Type LispMax_Environment
 		If Self._parent <> Null Then output:+ Self._parent.dump()
 		
 		For Local symbol:String = EachIn Self._lookup.Keys()
+			
+			Local atom:LispMax_Atom = LispMax_Atom(Self._lookup.ValueForKey(symbol))
+			
 			' [todo] - This should probably never happen
-			If Self._lookup.ValueForKey(symbol) = Null Then
+			If atom = Null Then
 				DebugLog symbol + " is null!"
-			Else 
-				output :+ "  (" + symbol + " . " + LispMax_Atom(Self._lookup.ValueForKey(symbol)).value_symbol + ")~n"
+			Else
+				Select atom.atom_type
+					
+					Case LispMax_Atom.ATOM_TYPE_SYMBOL
+						output :+ "  (" + symbol + " . " + atom.value_symbol + ")~n"
+						
+					Case LispMax_Atom.ATOM_TYPE_BUILTIN
+						output :+ "  (" + symbol + " . <#BUILTIN>)~n"
+					
+					Case LispMax_Atom.ATOM_TYPE_STRING
+						output :+ "  (" + symbol + " . ~q" + atom.value_symbol + "~q)~n"
+						
+					Case LispMax_Atom.ATOM_TYPE_CLOSURE
+						output :+ "  (" + symbol + " . <#CLOSURE>)~n"
+						
+					Case LispMax_Atom.ATOM_TYPE_INTEGER
+						output :+ "  (" + symbol + " . " + atom.value_number + ")~n"
+						
+					Case LispMax_Atom.ATOM_TYPE_MACRO
+						output :+ "  (" + symbol + " . <#MACRO>)~n"
+						
+					Default
+						output :+ "  (" + symbol + " . " + atom.ToString() + ")~n"
+				
+				End Select
+				
 			EndIf
 		Next
 		

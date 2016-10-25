@@ -4,11 +4,12 @@
 
 Function LispMax_Builtin_Car:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
 	
-	If args.isNil() Or Not(args.cdr().isNil()) Then 
+	If args.isNil() Or Not(args.cdr().isNil()) Then
+		lisp.printExpression(args)
 		Throw New Lispmax_ArgumentException
 	EndIf
 	
-	If args.car().isNil() Then
+	If args.car().isNil() Or args.car().atom_type = 0 Then
 		Return LispMax_Nil
 	ElseIf args.car().atom_type <> LispMax_Atom.ATOM_TYPE_PAIR Then
 		throw Lispmax_UnexpectedTypeException.create("CAR", Lispmax_Atom.ATOM_TYPE_PAIR, args.car().atom_type)
@@ -24,7 +25,7 @@ Function LispMax_Builtin_Cdr:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
 		Throw New Lispmax_ArgumentException
 	EndIf
 	
-	If args.car().isNil() Then
+	If args.car().isNil() Or args.car().atom_type = 0 Then
 		Return LispMax_Nil
 	ElseIf args.car().atom_type <> LispMax_Atom.ATOM_TYPE_PAIR Then
 		throw Lispmax_UnexpectedTypeException.create("CDR", Lispmax_Atom.ATOM_TYPE_PAIR, args.car().atom_type)
@@ -267,7 +268,7 @@ End Function
 
 Function LispMax_Builtin_Apply:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
 	
-	lisp.printExpression(args)
+'	lisp.printExpression(args)
 
 	If args.isNil() Or args.cdr().isNil() Or Not(args.cdr().cdr().isNil()) Then 
 		Throw New Lispmax_ArgumentException
@@ -282,6 +283,41 @@ Function LispMax_Builtin_Apply:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
 	
 	Return lisp.apply(fn, args)
 	
+End Function
+
+
+' ----------------------------------------------------------------------
+' -- String Functions
+' ----------------------------------------------------------------------
+
+Function LispMax_Builtin_StringUpcase:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
+
+	' Throw an error if more than one argument passed in
+	' TODO: Improve this
+	If args.isNil() Or Not(args.cdr().isNil()) Then
+		Throw New Lispmax_ArgumentException
+	EndIf
+	
+	If args.car().atom_type <> LispMax_Atom.ATOM_TYPE_STRING Then
+		Throw New Lispmax_UnexpectedTypeException
+	End If
+		
+	Return lisp.MakeString(args.car().value_symbol.ToUpper())
+	
+End Function
+
+Function LispMax_Builtin_StringDowncase:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
+	
+	If args.isNil() Or Not(args.cdr().isNil()) Then
+		Throw New Lispmax_ArgumentException
+	EndIf
+	
+	If args.car().atom_type <> LispMax_Atom.ATOM_TYPE_STRING Then
+		Throw New Lispmax_UnexpectedTypeException
+	End If
+		
+	Return lisp.MakeString(args.car().value_symbol.ToLower())
+		
 End Function
 
 
@@ -392,6 +428,37 @@ Function LispMax_Builtin_Print:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
 		lisp.printExpression(args.car())
 	EndIf
 	
+	Return LispMax.makeNil()
+	
+End Function
+
+Function LispMax_Builtin_Debuglog:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
+
+	If args.isNil() Or args.car().isNil() Or Not(args.cdr().isNil()) Then
+		Throw New Lispmax_ArgumentException
+	EndIf
+	
+	If args.car().atom_type = LispMax_Atom.ATOM_TYPE_STRING Then
+		DebugLog args.car().value_symbol
+	ElseIf args.car().atom_type = LispMax_Atom.ATOM_TYPE_INTEGER Then
+		DebugLog args.car().value_number
+	Else
+		DebugLog lisp.expressionToString(args.car())
+	EndIf
+	
+	Return args.car()
+	
+End Function
+
+Function LispMax_Builtin_PrintExpression:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
+
+	If args.isNil() Or args.car().isNil() Or Not(args.cdr().isNil()) Then
+		Print "Throw New Lispmax_ArgumentException: " + lisp.expressionToString(args.cdr())
+	
+	EndIf
+	
+	lisp.printExpression(args.car())
+		
 	Return LispMax.makeNil()
 	
 End Function

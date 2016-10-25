@@ -1,8 +1,14 @@
+' lispmax_lexer.bmx
+'
+' Parses strings into collections of tokens.
+
+
 SuperStrict
 
 Import brl.linkedlist
 Import sodaware.blitzmax_ascii
 Import brl.standardio
+
 
 Type LispMax_Lexer
 	
@@ -142,9 +148,22 @@ Type LispMax_Lexer
 		
 		Local currentChar:Byte = Self._buffer[Self._pos]
 		
+		' [todo] - Update this to handle \ characters
 		While currentChar <> 0 And currentChar <> ASC_QUOTE
-		
-			v:+ LispMax_Lexer.CHAR_LOOKUP[currentChar]
+			
+			' Handle backslash
+			' [todo] - Update to handle newline character
+			if currentChar = ASC_BACKSLASH then
+				local nextChar:Byte = self._buffer[self._pos + 1]
+				select nextChar
+					case ASC_QUOTE
+						v:+ "~q"
+						Self._pos:+ 1
+				end select
+			else
+				v:+ LispMax_Lexer.CHAR_LOOKUP[currentChar]
+			endif
+
 			
 			Self._pos:+ 1
 			If Self._pos >= Self._buffer.Length Then

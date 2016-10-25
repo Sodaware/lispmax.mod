@@ -1,8 +1,18 @@
 SuperStrict
 
 Type Lispmax_SyntaxErrorException Extends TBlitzException
+
+	Field _message:String
+
+	Function Create:Lispmax_SyntaxErrorException(message:String)
+		Local this:Lispmax_SyntaxErrorException = New Lispmax_SyntaxErrorException
+		this._message = message
+		Return this
+	End Function
+
 	Method ToString:String()
-		Return "Syntax Error"
+		If Self._message = "" Then Return "Syntax Error"
+		Return "Syntax Error: " + Self._message
 	End Method
 End Type
 
@@ -33,21 +43,71 @@ Type Lispmax_UnexpectedTypeException Extends TBlitzException
 	field _source:String
 	field _arg:String
 	field _expected:int
-	field _actual:int
-
-	Function Create:Lispmax_UnexpectedTypeException(source:String, expected:int, actual:int)
+	Field _actual:Int
+	
+	Function Create:Lispmax_UnexpectedTypeException(source:String, expected:Int, actual:Int, arg:String = "")
 		Local this:Lispmax_UnexpectedTypeException = New Lispmax_UnexpectedTypeException
 		this._source	= source
-		this._expected = expected
-		this._actual   = actual
+		this._expected	= expected
+		this._actual  	= actual
+		this._arg		= arg
 		Return this
 	End Function
 
 	Method ToString:String()
-		if _expected <> "" then
-			Return "Operator ~q" + self._source + "~q expected a type of ~q" + self._expected + "~q, got ~q" + self._actual + "~q"
-		else
+		
+		If Self._arg <> "" And _expected <> "" Then
+			Return "Operator ~q" + Self._source + "~q expected argument ~q" + Self._arg + "~q to be type ~q" + GetAtomTypeAsString(Self._expected) + "~q, ~q" + GetAtomTypeAsString(Self._actual) + "~q given."
+		ElseIf _expected <> "" Then
+			Return "Operator ~q" + Self._source + "~q expected a type of ~q" + GetAtomTypeAsString(Self._expected) + "~q, got ~q" + GetAtomTypeAsString(Self._actual) + "~q"
+		Else
 			Return "An object in an expression was of a different type than expected"
 		End If
+		
 	End Method
+	
 End Type
+
+Type Lispmax_MissingArgumentException Extends TBlitzException
+	
+	field _source:String
+	field _arg:String
+	Field _message:String
+
+	Function Create:Lispmax_MissingArgumentException(source:String, argName:String)
+		Local this:Lispmax_MissingArgumentException = New Lispmax_MissingArgumentException
+		this._source	= source
+		this._arg		= argName
+		Return this
+	End Function
+
+	Method ToString:String()
+		
+		If Self._arg <> "" then
+			Return "Operator ~q" + Self._source + "~q is missing argument ~q" + Self._arg + "~q"
+		Else
+			Return "Operator ~q" + self._source + "~q did not receive enough arguments"
+		End If
+		
+	End Method
+	
+End Type
+
+Private
+
+' UGLY!
+Function GetAtomTypeAsString:String(atomType:Int)
+	
+	Select atomType
+		Case 1	; Return "INTEGER"
+		Case 2	; Return "SYMBOL"
+		Case 3	; Return "NIL"
+		Case 4	; Return "PAIR"
+		Case 5	; Return "BUILTIN"
+		Case 6	; Return "CLOSURE"
+		Case 7	; Return "MACRO"
+		Case 8	; Return "STRING"
+		Default	; Return "Unknown [" + atomType + "]"
+	End Select
+		
+End Function

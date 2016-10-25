@@ -6,20 +6,28 @@ http://recurial.com/programming/interpreting-scheme-syntax-part-1/
 http://homepage1.nifty.com/bmonkey/lisp/sacla/index-en.html
 https://github.com/fogus/lithp/tree/master/src
 
-* Tasks [15/27]
+* Tasks [18/29]
 ** TODO Add "cond"/"else"
+** TODO Fix how strings are decoded:
+   SCHEDULED: <2015-06-13 Sat>
+   #+BEGIN_SRC lisp
+   (:emacs-rex (swank:interactive-eval "(print \"whatever\")") nil t 2)
+   #+END_SRC
+   Does not decode the properly (the slashes throw it off - should return a
+   single string containing the entire expression)
 ** DONE Add "when"
 ** DONE Add logic helpers [3/3]
    - [X] or
    - [X] and
    - [X] not
 ** DONE [#A] Re-implement progn
-** TODO [#A] Fix "LET"
+** DONE [#A] Fix "LET"
    Doesn't seem to work correctly, so we can't build "cond" out of it
-** TODO [#A] Fix mapcar
+** DONE [#A] Fix mapcar
    Looks like there's a problem in how passing a quoted function pointer or
    something. Not being found in the function table?
 ** TODO [#C] Add garbage collection
+** TODO [#A] Add support for floating point values
 ** DONE Implement &rest
    https://github.com/vsedach/Parenscript/blob/master/src/parse-lambda-list.lisp#L77
 ** TODO Implement &optional
@@ -49,7 +57,7 @@ https://github.com/fogus/lithp/tree/master/src
     better to have it as part of the core.
     As it currently stands, =when= takes about 100 times longer to execute, and
     has taken as long as half a second. Not good.
-** TODO [#C] Add "defun" macro
+** DONE [#C] Add "defun" macro
    - (defun function-name (params) docstring body) ;; body is implicit progn
 ** TODO Rewrite lispmax_core.bmx and merge unused stuff
    Now that it runs as a stack-based app (and not much slowed), we can remove

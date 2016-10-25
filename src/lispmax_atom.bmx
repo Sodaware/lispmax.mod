@@ -1,4 +1,10 @@
-' Atoms are the building blocks for all Lisp expressions
+' ------------------------------------------------------------------------------
+' -- src/lispmax_atom.bmx
+' -- 
+' -- Atoms are the building blocks for all Lisp expressions. An atom can be a
+' -- number of things, such as a string, symbol or integer.
+' ------------------------------------------------------------------------------
+
 
 Type LispMax_Atom
 
@@ -23,9 +29,9 @@ Type LispMax_Atom
 	Const SYMBOL_APPLY:Int		= 8
 	Const SYMBOL_SUSPEND:Int	= 9
 	
+	' -- Actual atom data
 	Field atom_type:Byte
 	Field special_symbol:Byte
-	
 	Field value_pair:LispMax_Pair
 	Field value_symbol:String
 	Field value_number:Long
@@ -34,23 +40,6 @@ Type LispMax_Atom
 	' Internal environment - only used by Callable types
 	Field _environment:LispMax_Environment
 	
-	Method copy:LispMax_Atom()
-		
-		Local newAtom:LispMax_Atom = New LispMax_Atom
-		
-		newAtom.value_pair 		= Self.value_pair.copy()
-		newAtom.value_symbol	= Self.value_symbol
-		newAtom.value_number 	= Self.value_number
-		newAtom.value_builtin 	= Self.value_builtin
-		newAtom.special_symbol	= Self.special_symbol
-		newAtom._environment	= Self._environment
-		
-		'If Self.car() <> Null And Self.car().isNil() = False Then newAtom.car(Self.car().copy())
-		'If Self.cdr() <> Null And Self.cdr().isNil() = False Then newAtom.cdr(Self.cdr().copy())
-		
-		Return newAtom
-		
-	End Method
 	
 	' ----------------------------------------------------------------------
 	' -- Pair Helpers
@@ -66,7 +55,37 @@ Type LispMax_Atom
 		Return Self.value_pair.atom[1]
 	End Method
 	
+	' car car
+	Method caar:LispMax_Atom()
+		Return Self.value_pair.atom[0].value_pair.atom[0]
+	End Method
 	
+	' cdr cdr
+	Method cddr:LispMax_Atom()
+		Return Self.value_pair.atom[1].value_pair.atom[1]
+	End Method
+	
+	' car car car
+	Method caaar:LispMax_Atom()
+		Return Self.value_pair.atom[0].value_pair.atom[0].value_pair.atom[0]
+	End Method
+	
+	' cdr cdr cdr
+	Method cdddr:LispMax_Atom()
+		Return Self.value_pair.atom[1].value_pair.atom[1].value_pair.atom[1]
+	End Method
+	
+	' car cdr
+	Method cadr:LispMax_Atom()
+		Return Self.value_pair.atom[0].value_pair.atom[1]
+	End Method
+	
+	' cdr car
+	Method cdar:LispMax_Atom()
+		Return Self.value_pair.atom[1].value_pair.atom[0]
+	End Method
+
+		
 	' ----------------------------------------------------------------------
 	' -- Predicates
 	' ----------------------------------------------------------------------
@@ -124,6 +143,29 @@ Type LispMax_Atom
 	
 	
 	' ----------------------------------------------------------------------
+	' -- Copying Atoms
+	' ----------------------------------------------------------------------
+	
+	Method copy:LispMax_Atom()
+		
+		Local newAtom:LispMax_Atom = New LispMax_Atom
+		
+		newAtom.value_pair 		= Self.value_pair.copy()
+		newAtom.value_symbol	= Self.value_symbol
+		newAtom.value_number 	= Self.value_number
+		newAtom.value_builtin 	= Self.value_builtin
+		newAtom.special_symbol	= Self.special_symbol
+		newAtom._environment	= Self._environment
+		
+		'If Self.car() <> Null And Self.car().isNil() = False Then newAtom.car(Self.car().copy())
+		'If Self.cdr() <> Null And Self.cdr().isNil() = False Then newAtom.cdr(Self.cdr().copy())
+		
+		Return newAtom
+		
+	End Method
+	
+	
+	' ----------------------------------------------------------------------
 	' -- Creation / Destruction
 	' ----------------------------------------------------------------------
 		
@@ -138,6 +180,11 @@ Type LispMax_Atom
 	End Method
 	
 End Type
+
+
+' ----------------------------------------------------------------------
+' -- Sub-Types
+' ----------------------------------------------------------------------
 
 Type LispMax_Pair
 	Field atom:LispMax_Atom[2]
@@ -155,6 +202,10 @@ Type LispMax_Pair
 	
 End Type
 
+Type Lispmax_Callable Abstract
+	Method call:LispMax_Atom(caller:LispMax, args:LispMax_Atom) Abstract
+End Type
+
 Type Lispmax_Builtin Extends Lispmax_Callable
 	
 	Field _handler:LispMax_Atom(lisp:LispMax, args:Lispmax_Atom)
@@ -162,11 +213,5 @@ Type Lispmax_Builtin Extends Lispmax_Callable
 	Method call:LispMax_Atom(caller:LispMax, args:LispMax_Atom)
 		Return Self._handler(caller, args)
 	End Method
-	
-End Type
-
-Type Lispmax_Callable Abstract
-	
-	Method call:LispMax_Atom(caller:LispMax, args:LispMax_Atom) Abstract
 	
 End Type

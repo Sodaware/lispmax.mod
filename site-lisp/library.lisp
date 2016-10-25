@@ -41,7 +41,7 @@
 
 (define (not x)
   (if (eq? nil x) t nil))
- 
+
 (defmacro (when condition &rest body)
   `(if ,condition (progn ,@body) nil))
 
@@ -71,6 +71,9 @@
 
 ;; List Helpers
 
+(define (acons x y a)
+  (cons (cons x y) a))
+
 (define (caar x)
   (car (car x)))
 
@@ -80,7 +83,7 @@
 (define (length lst)
   (if (nil? lst)
       0
-    (+ 1 (length (cdr lst)))))
+      (+ 1 (length (cdr lst)))))
 
 (define (list . items)
   (foldr cons nil items))
@@ -93,25 +96,32 @@
       (foldl proc
              (proc init (car list))
              (cdr list))
-    init))
+      init))
 
-(define (foldr proc init list)
-  (if list
-      (proc (car list)
-            (foldr proc init (cdr list)))
-    init))
-
-(define (reduce func init lst)
+(define (foldr func init lst)
   (if lst
       (func (car lst)
-            (reduce func init (cdr lst)))
-    init))
+            (foldr func init (cdr lst)))
+      init))
+
+(define (reduce func init lst)
+  (foldr func init lst))
 
 (define (sum lst)
   (reduce + 0 lst))
 
 (define (square x)
   (* x x))
+
+;; (define (remove-if condition list)
+;;   (delq nil (mapcar (lambda (x)
+;;                       (and (funcall condition x) x)) list)))
+
+;; Factorial
+(define (! n)
+  (if (= n 0) 
+      1  
+      (* n (! (- n 1)))))
 
 (define (random-list-index list)
   (- (rand 1 (length list)) 1))
@@ -120,34 +130,59 @@
   (nth (random-list-index list) list))
 
 (define (assoc key records)
-  (cond ((nil? records) false)
-        ((eq? key (caar records)) (car records))
-        (else (assoc key (cdr records)))))
+  (if (nil? records)
+      nil
+      (if (eq? key (caar records))
+          (car records)
+          (assoc key (cdr records)))))
 
+(define (cdr-assoc key records)
+  (let ((property-pair (assoc key records)))
+    (if property-pair
+        (cdr property-pair) 
+        nil)))
+
+;; ;; < this is nicer but much, MUCH slower >
+;; (define (assoc-cond key records)
+;;     (cond ((nil? records) nil)
+;;           ((eq? key (caar records)) (car records))
+;;           (T (assoc-cond key (cdr records)))))
+
+;; Do we need this?
 (define (unary-map proc2 list)
   (foldr (lambda (x remaining) (cons (proc2 x) remaining))
          nil
          list))
 
-(define (map proc . arg-list)
+;; Do we even need this?
+(define (map proc arg-list)
   (if (car arg-list)
       (cons (apply proc (unary-map car arg-list))
             (apply map (cons proc
                              (unary-map cdr arg-list))))
-    nil))
+      nil))
 
 (define (mapcar func arg-list)
   (if arg-list
-    (cons (func (car arg-list)) 
-          (mapcar func (cdr arg-list)))
-    nil))
+      (cons (func (car arg-list)) 
+            (mapcar func (cdr arg-list)))
+      nil))
 
+;; Works the same way as mapcar, but returns the original list
+(define (mapc func arg-list)
+  (if arg-list
+      (func (car arg-list))
+      (mapcar func (cdr arg-list)))
+  arg-list)
+
+;; Have to both be lists
 (define (append a b)
   (foldr cons b a))
 
 (defmacro (funcall . form)
   form)
 
+;; [todo] - Move this up to the compiler if possible...
 (defmacro (quasiquote x)
   (if (pair? x)
       (if (eq? (car x) 'unquote)
@@ -162,66 +197,37 @@
       (list 'quote x)))
 
 
-;; Loops
-
-;(defmacro (something defs)
-;  `(print ,(car defs)))
-
 (defmacro (let defs &rest body)
-  ;(print (map car defs)))
-  (mapcar 'print defs))
-  
-  ;`((lambda ,(map car defs) ,@body)
-  ;  ,@(map cadr defs)))
+  `((lambda ,(mapcar car defs) ,@body)
+    ,@(mapcar cadr defs)))
 
-(defmacro (cond conds)
+(defmacro (cond . conds)
   (foldr
    (lambda (cnd acc)
      `(if ,(car cnd) ,(cadr cnd) ,acc))
    nil conds))
 
-;(defmacro (cond &rest clauses)
- ; (when clauses
- ;   (let ((test1 (caar clauses))
- ;         (forms1 (cdar clauses)))
- ;     (if forms1
- ;         `(if ,test1
- ;              (progn ,@forms1)
- ;            (cond ,@(cdr clauses)))
- ;       (let ((tmp (gensym)))
- ;         `(let ((,tmp ,test1))
- ;            (if ,tmp
- ;                ,tmp
- ;              (cond ,@(cdr clauses)))))))))
 
 
+;;(define (+)
+;;    (let ((old+ +))
+;;      (lambda xs (foldl old+ 0 xs))))
 
-;(define +
-;  (let ((old+ +))
-;    (lambda xs (foldl old+ 0 xs))))
+;;(defun < (x y) (. x < y))
+;;(defun = (x y) (. x == y))
+;;(defun /= (x y) (not (= x y)))
+;;(defun <= (x y) (or (< x y) (= x y)))
+;;(defun > (x y) (. x == y))
+;; (defun /= (x y) (not (= x y)))
 
-;(defmacro (or_ a b) `(if ,a t (if ,b t nil)))
-;(defmacro (or x y @args)
-;  (foldr (\ (expr acc) `(or_ ,acc ,expr)) `(or_ ,x ,y) args))
+;;(defun <= (x y) (not (<= x y)))
+;;(defun >= (x y) (not (< x y)))
+;;(defun between? (x y z) (and (> x y) (< x z)))
+;;(defun nil? (x) (eq? x nil))
+;;(defun cons? (e) (. e is_a? (ruby Cons)))
+;;(defun atom? (e) (not (cons? e)))
+;;(defun eq? (x y) (. x equal? y))
 
-;(defun < (x y) (. x < y))
-;(defun = (x y) (. x == y))
-;(defun /= (x y) (not (= x y)))
-;(defun <= (x y) (or (< x y) (= x y)))
-;(defun > (x y) (. x == y))
-;(defun /= (x y) (not (= x y)))
-;(defun <= (x y) (not (<= x y)))
-;(defun >= (x y) (not (< x y)))
-;(defun between? (x y z) (and (> x y) (< x z)))
-;(defun nil? (x) (eq? x nil))
-;(defun cons? (e) (. e is_a? (ruby Cons)))
-;(defun atom? (e) (not (cons? e)))
-;(defun eq? (x y) (. x equal? y))
-;
-;(defmacro until (cond body)
-;  `(do (not ,cond) ,body))
-;(defmacro cond (@conds)
-;  (foldr
-;   (lambda (cnd acc)
-;     `(if ,(car cnd) ,(cadr cnd) ,acc))
-;   nil conds))
+;;(defmacro until (cond body)
+;;  `(do (not ,cond) ,body))
+
