@@ -6,28 +6,37 @@
 ' ------------------------------------------------------------------------------
 
 
+const LISPMAX_CAR:byte = 0
+const LISPMAX_CDR:byte = 1
+
 Type LispMax_Atom
 
-	Global total_created:Int 	= 0
+	' Global statistics.
+	Global total_created:Int     = 0
+	Global total_deleted:Int     = 0
 	
-	Const ATOM_TYPE_INTEGER:Int = 1
-	Const ATOM_TYPE_SYMBOL:Int	= 2
-	Const ATOM_TYPE_NIL:Int 	= 3
-	Const ATOM_TYPE_PAIR:Int 	= 4
-	Const ATOM_TYPE_BUILTIN:Int	= 5
-	Const ATOM_TYPE_CLOSURE:Int = 6
-	Const ATOM_TYPE_MACRO:Int 	= 7
-	Const ATOM_TYPE_STRING:Int	= 8
+	Const ATOM_TYPE_INTEGER:Byte = 1
+	Const ATOM_TYPE_SYMBOL:Byte	 = 2
+	Const ATOM_TYPE_NIL:Byte     = 3
+	Const ATOM_TYPE_PAIR:Byte    = 4
+	Const ATOM_TYPE_BUILTIN:Byte = 5
+	Const ATOM_TYPE_CLOSURE:Byte = 6
+	Const ATOM_TYPE_MACRO:Byte   = 7
+	Const ATOM_TYPE_STRING:Byte  = 8
 	
-	Const SYMBOL_QUOTE:Int		= 1
-	Const SYMBOL_DEFMACRO:Int	= 2
-	Const SYMBOL_DEFINE:Int		= 3
-	Const SYMBOL_PROGN:Int		= 4
-	Const SYMBOL_SETQ:Int		= 5
-	Const SYMBOL_LAMBDA:Int		= 6
-	Const SYMBOL_IF:Int			= 7
-	Const SYMBOL_APPLY:Int		= 8
-	Const SYMBOL_SUSPEND:Int	= 9
+	' Special symbols that are evaluated internally
+	Const SYMBOL_QUOTE:Byte	     = 1
+	Const SYMBOL_DEFMACRO:Byte   = 2
+	Const SYMBOL_DEFINE:Byte     = 3
+	Const SYMBOL_PROGN:Byte      = 4
+	Const SYMBOL_SETQ:Byte       = 5
+	Const SYMBOL_LAMBDA:Byte     = 6
+	Const SYMBOL_IF:Byte         = 7
+	Const SYMBOL_APPLY:Byte      = 8
+	Const SYMBOL_SUSPEND:Byte    = 9
+	Const SYMBOL_WHEN:Byte       = 10
+	Const SYMBOL_UNLESS:Byte     = 11
+	Const SYMBOL_DEFUN:Byte      = 12
 	
 	' -- Actual atom data
 	Field atom_type:Byte
@@ -45,13 +54,22 @@ Type LispMax_Atom
 	' -- Pair Helpers
 	' ----------------------------------------------------------------------
 	
-	Method car:LispMax_Atom(value:LispMax_Atom = null)
-		if value then self.value_pair.atom[0] = value
+	Method car:LispMax_Atom(value:LispMax_Atom = Null)
+		If value Then Self.value_pair.atom[0] = value
 		Return Self.value_pair.atom[0]
 	End Method
 
-	Method cdr:LispMax_Atom(value:LispMax_Atom = null)
-		if value then self.value_pair.atom[1] = value
+	''' <summary>Get the value of the atom's CAR.</summary>
+	Method getCar:LispMax_Atom()
+		Return Self.value_pair.atom[0]
+	End Method
+
+	Method getPair:LispMax_Pair()
+		Return Self.value_pair
+	End Method
+
+	Method cdr:LispMax_Atom(value:LispMax_Atom = Null)
+		If value Then Self.value_pair.atom[1] = value
 		Return Self.value_pair.atom[1]
 	End Method
 	
@@ -85,6 +103,11 @@ Type LispMax_Atom
 		Return Self.value_pair.atom[1].value_pair.atom[0]
 	End Method
 
+    ' cdr cdr car
+	Method cddar:LispMax_Atom()
+		Return Self.value_pair.atom[1].value_pair.atom[1].value_pair.atom[0]
+	End Method
+	
 		
 	' ----------------------------------------------------------------------
 	' -- Predicates
@@ -93,7 +116,12 @@ Type LispMax_Atom
 	Method nilp:Byte()
 		Return Self.atom_type = LispMax_Atom.ATOM_TYPE_NIL
 	End Method
+
+	Method isNil:Byte()
+		Return Self.atom_type = LispMax_Atom.ATOM_TYPE_NIL
+	End Method
 	
+	' This can be a little slow...
 	Method listp:Byte()
 		
 		Local expression:LispMax_Atom = Self
@@ -108,16 +136,12 @@ Type LispMax_Atom
 			
 	End Method
 	
-	Method isNil:Byte()
-		Return Self.nilp()
-	End Method
-	
 	
 	' ----------------------------------------------------------------------
 	' -- Type Checking
 	' ----------------------------------------------------------------------
 			
-	Method isAtomType:Byte(atomType:Int)
+	Method isAtomType:Byte(atomType:Byte)
 		Return Self.atom_type = atomType
 	End Method
 	
@@ -175,6 +199,12 @@ Type LispMax_Atom
 		Self.value_pair = New LispMax_Pair
 	End Method
 	
+	Method Delete()
+		LispMax_Atom.total_deleted:+ 1
+		Self.value_pair.atom[0] = Null
+		Self.value_pair.atom[1] = Null
+	End Method
+	
 	Method Destroy()
 		DebugLog "Object sploded"
 	End Method
@@ -202,6 +232,7 @@ Type LispMax_Pair
 	
 End Type
 
+''' <summary>A callable atom (i.e. a function or lambda).</summary>
 Type Lispmax_Callable Abstract
 	Method call:LispMax_Atom(caller:LispMax, args:LispMax_Atom) Abstract
 End Type
