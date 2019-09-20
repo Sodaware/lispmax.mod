@@ -1,11 +1,11 @@
 ;;; library.lisp --- Core lisp functionality for LispMax
 
-;; Copyright (C) 2014         Phil Newton <phil@sodaware.net>
+;; Copyright (C) 2014 - 2019  Phil Newton <phil@sodaware.net>
 
 ;; This file contains functionality required by LispMax.
 
 ;; Author: Phil Newton <phil@sodaware.net>
-;; URL: http://www.sodaware.net/dev/blitz/lispmax/
+;; URL: https://www.sodaware.net/lispmax/
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -22,17 +22,9 @@
 
 ;;; Code:
 
-;; Defining things
 
-;;;
-;; Define a new function with a docstring.
-(defmacro (defun name args docstring &rest body)
-  (if (pair? args)
-      `(define (,name ,@args) ,@body)
-      `(define (,name) ,@body)))
-
-
-;; Core Logic Helpers
+;; --------------------------------------------------
+;; -- Boolean Logic
 
 (defmacro (and a b)
   (list 'if a b nil))
@@ -40,19 +32,16 @@
 (define (nand a b)
   (not (and a b)))
 
-(define (or a b)
-  (nand (nand a a) (nand b b)))
-
 (define (not x)
   (if (eq? nil x) t nil))
 
-(defmacro (when condition &rest body)
-  `(if ,condition (progn ,@body) nil))
+;; This is required to make `when` and `unless` work.
+(defmacro (-unused)
+  (progn nil))
 
-(defmacro (unless condition &rest body)
-  `(if (not ,condition) (progn ,@body) nil))
 
-;; Maths Helpers
+;; --------------------------------------------------
+;; -- Math Functions
 
 (define (abs x)
   (if (< x 0) (- 0 x) x))
@@ -72,8 +61,28 @@
 (define (even? n)
   (not (odd? n)))
 
+(define (square x)
+  (* x x))
 
-;; List Helpers
+(define (<= x y)
+  (not (> x y)))
+
+(define (>= x y)
+  (not (< x y)))
+
+;; TODO: Move this to a builtin for better performance.
+(define (! n)
+  (if (= n 0)
+      1
+      (* n (! (- n 1)))))
+
+
+;; --------------------------------------------------
+;; -- List Functions
+
+;; Create a new list containing ITEMS.
+;; (define (list . items)
+;;   (foldr cons nil items))
 
 (define (acons x y a)
   (cons (cons x y) a))
@@ -84,13 +93,11 @@
 (define (cadr x)
   (car (cdr x)))
 
+;; TODO: Move this to a built-in.
 (define (length lst)
   (if (nil? lst)
       0
       (+ 1 (length (cdr lst)))))
-
-(define (list . items)
-  (foldr cons nil items))
 
 (define (reverse list)
   (foldl (lambda (a x) (cons x a)) nil list))
@@ -108,24 +115,39 @@
             (foldr func init (cdr lst)))
       init))
 
+;; Apply FUNC to all items in COLLECTION and return the result
+;; e.g. (map + (list 1 2 3) (list 1 2 3)) => (2 4 6)
+(define (map func . collection)
+  (if (car collection)
+      (cons (apply func (unary-map car collection))
+            (apply map (cons func
+                             (unary-map cdr collection))))
+      nil))
+
+;; Applies FUNC to all items in COLLECTION and returns a list containing the results.
+(define (mapcar func collection)
+  (if collection
+      (cons (func (car collection))
+            (mapcar func (cdr collection)))
+      nil))
+
+;; Applies FUNC to all items in COLLECTION, and returns the original COLLECTION.
+(define (mapc func collection)
+  (if collection
+      (cons (func (car collection))
+            (mapc func (cdr collection)))
+      nil)
+  collection)
+
 (define (reduce func init lst)
-  (foldr func init lst))
+  (fast-foldr func init lst))
 
 (define (sum lst)
   (reduce + 0 lst))
 
-(define (square x)
-  (* x x))
-
 ;; (define (remove-if condition list)
 ;;   (delq nil (mapcar (lambda (x)
 ;;                       (and (funcall condition x) x)) list)))
-
-;; Factorial
-(define (! n)
-  (if (= n 0) 
-      1  
-      (* n (! (- n 1)))))
 
 (define (random-list-index list)
   (- (rand 1 (length list)) 1))
@@ -143,7 +165,7 @@
 (define (cdr-assoc key records)
   (let ((property-pair (assoc key records)))
     (if property-pair
-        (cdr property-pair) 
+        (cdr property-pair)
         nil)))
 
 ;; ;; < this is nicer but much, MUCH slower >
@@ -154,39 +176,23 @@
 
 ;; Do we need this?
 (define (unary-map proc2 list)
-  (foldr (lambda (x remaining) (cons (proc2 x) remaining))
-         nil
-         list))
-
-;; Do we even need this?
-(define (map proc arg-list)
-  (if (car arg-list)
-      (cons (apply proc (unary-map car arg-list))
-            (apply map (cons proc
-                             (unary-map cdr arg-list))))
-      nil))
-
-(define (mapcar func arg-list)
-  (if arg-list
-      (cons (func (car arg-list)) 
-            (mapcar func (cdr arg-list)))
-      nil))
-
-;; Works the same way as mapcar, but returns the original list
-(define (mapc func arg-list)
-  (if arg-list
-      (func (car arg-list))
-      (mapcar func (cdr arg-list)))
-  arg-list)
+  (fast-foldr (lambda (x remaining)
+                (cons (proc2 x) remaining))
+              nil
+              list))
 
 ;; Have to both be lists
 (define (append a b)
-  (foldr cons b a))
+  (fast-foldr cons b a))
+
+
+;; --------------------------------------------------
+;; -- Language Features
 
 (defmacro (funcall . form)
   form)
 
-;; [todo] - Move this up to the compiler if possible...
+;; TODO: Move this up to the compiler if possible...
 (defmacro (quasiquote x)
   (if (pair? x)
       (if (eq? (car x) 'unquote)
@@ -200,38 +206,30 @@
                     (list 'quasiquote (cdr x)))))
       (list 'quote x)))
 
-
 (defmacro (let defs &rest body)
   `((lambda ,(mapcar car defs) ,@body)
     ,@(mapcar cadr defs)))
 
-(defmacro (cond . conds)
+;; TODO: Would /really/ like to use fast-foldr here
+(defmacro (cond &rest conds)
   (foldr
    (lambda (cnd acc)
      `(if ,(car cnd) ,(cadr cnd) ,acc))
    nil conds))
 
 
-
 ;;(define (+)
 ;;    (let ((old+ +))
 ;;      (lambda xs (foldl old+ 0 xs))))
 
-;;(defun < (x y) (. x < y))
-;;(defun = (x y) (. x == y))
 ;;(defun /= (x y) (not (= x y)))
 ;;(defun <= (x y) (or (< x y) (= x y)))
-;;(defun > (x y) (. x == y))
 ;; (defun /= (x y) (not (= x y)))
 
-;;(defun <= (x y) (not (<= x y)))
-;;(defun >= (x y) (not (< x y)))
 ;;(defun between? (x y z) (and (> x y) (< x z)))
-;;(defun nil? (x) (eq? x nil))
 ;;(defun cons? (e) (. e is_a? (ruby Cons)))
 ;;(defun atom? (e) (not (cons? e)))
 ;;(defun eq? (x y) (. x equal? y))
 
 ;;(defmacro until (cond body)
 ;;  `(do (not ,cond) ,body))
-
