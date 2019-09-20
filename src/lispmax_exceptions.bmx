@@ -1,7 +1,12 @@
 ' ------------------------------------------------------------------------------
 ' -- src/lispmax_exceptions.bmx
-' -- 
+' --
 ' -- All exceptions that can be thrown during execution.
+' --
+' -- This file is part of sodaware.mod (https://www.sodaware.net/sodaware.mod/)
+' -- Copyright (c) 2009-2019 Phil Newton
+' --
+' -- See LICENSE for full license information.
 ' ------------------------------------------------------------------------------
 
 
@@ -37,13 +42,13 @@ End Type
 Type LispMax_UnboundSymbolException Extends LispMax_Exception
 
 	Field _symbol:String
-	
+
 	Function Create:Lispmax_UnboundSymbolException(symbol:String)
 		Local this:Lispmax_UnboundSymbolException = New Lispmax_UnboundSymbolException
 		this._symbol = symbol
 		Return this
 	End Function
-	
+
 	Method ToString:String()
 		Return "Attempted to evaluate symbol ~q" + Self._symbol + "~q, for which no binding exists"
 	End Method
@@ -57,39 +62,39 @@ Type LispMax_ArgumentException Extends LispMax_Exception
 End Type
 
 Type LispMax_UnexpectedTypeException Extends LispMax_Exception
-	
-	field _source:String
-	field _arg:String
-	field _expected:int
+
+	Field _source:String
+	Field _arg:String
+	Field _expected:Int
 	Field _actual:Int
-	
+
 	Function Create:Lispmax_UnexpectedTypeException(source:String, expected:Int, actual:Int, arg:String = "")
 		Local this:Lispmax_UnexpectedTypeException = New Lispmax_UnexpectedTypeException
 		this._source	= source
 		this._expected	= expected
-		this._actual  	= actual
+		this._actual	= actual
 		this._arg		= arg
 		Return this
 	End Function
 
 	Method ToString:String()
-		
+
 		If Self._arg <> "" And _expected <> "" Then
-			Return "Operator ~q" + Self._source + "~q expected argument ~q" + Self._arg + "~q to be type ~q" + GetAtomTypeAsString(Self._expected) + "~q, ~q" + GetAtomTypeAsString(Self._actual) + "~q given."
+			Return "LispMax_UnexpectedTypeException: Operator ~q" + Self._source + "~q expected argument ~q" + Self._arg + "~q to be type ~q" + GetAtomTypeAsString(Self._expected) + "~q, ~q" + GetAtomTypeAsString(Self._actual) + "~q given."
 		ElseIf _expected <> "" Then
-			Return "Operator ~q" + Self._source + "~q expected a type of ~q" + GetAtomTypeAsString(Self._expected) + "~q, got ~q" + GetAtomTypeAsString(Self._actual) + "~q"
+			Return "LispMax_UnexpectedTypeException: Operator ~q" + Self._source + "~q expected a type of ~q" + GetAtomTypeAsString(Self._expected) + "~q, got ~q" + GetAtomTypeAsString(Self._actual) + "~q"
 		Else
-			Return "An object in an expression was of a different type than expected"
+			Return "LispMax_UnexpectedTypeException: An object in an expression was of a different type than expected"
 		End If
-		
+
 	End Method
-	
+
 End Type
 
 Type LispMax_MissingArgumentException Extends LispMax_Exception
-	
-	field _source:String
-	field _arg:String
+
+	Field _source:String
+	Field _arg:String
 	Field _message:String
 
 	Function Create:Lispmax_MissingArgumentException(source:String, argName:String)
@@ -100,22 +105,22 @@ Type LispMax_MissingArgumentException Extends LispMax_Exception
 	End Function
 
 	Method ToString:String()
-		
-		If Self._arg <> "" then
+
+		If Self._arg <> "" Then
 			Return "Operator ~q" + Self._source + "~q is missing argument ~q" + Self._arg + "~q"
 		Else
-			Return "Operator ~q" + self._source + "~q did not receive enough arguments"
+			Return "Operator ~q" + Self._source + "~q did not receive enough arguments"
 		End If
-		
+
 	End Method
-	
+
 End Type
 
 Private
 
 ' UGLY!
 Function GetAtomTypeAsString:String(atomType:Int)
-	
+
 	Select atomType
 		Case 1	; Return "INTEGER"
 		Case 2	; Return "SYMBOL"
@@ -127,5 +132,5 @@ Function GetAtomTypeAsString:String(atomType:Int)
 		Case 8	; Return "STRING"
 		Default	; Return "Unknown [" + atomType + "]"
 	End Select
-		
+
 End Function
