@@ -1108,10 +1108,7 @@ Type LispMax
 		Local a:LispMax_Atom = LispMax.makeAtom()
 
 		a.atom_type     = LispMax_Atom.ATOM_TYPE_BUILTIN
-		a.value_builtin = New Lispmax_Builtin
-
-		' TODO: Clean this up.
-		Lispmax_Builtin(a.value_builtin)._handler = fn
+		a.value_builtin = Lispmax_Builtin.Create(fn)
 
 		Return a
 	End Function

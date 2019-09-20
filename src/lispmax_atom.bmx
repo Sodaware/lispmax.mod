@@ -216,11 +216,17 @@ Type Lispmax_Callable Abstract
 End Type
 
 Type Lispmax_Builtin Extends Lispmax_Callable
-
 	Field _handler:LispMax_Atom(lisp:LispMax, args:Lispmax_Atom)
 
 	Method call:LispMax_Atom(caller:LispMax, args:LispMax_Atom)
 		Return Self._handler(caller, args)
 	End Method
 
+	Function Create:LispMax_Builtin(fn:LispMax_Atom(lisp:LispMax, args:Lispmax_Atom))
+		Local this:LispMax_Builtin = New LispMax_Builtin
+
+		this._handler = fn
+
+		Return this
+	End Function
 End Type
