@@ -1,3 +1,15 @@
+' ------------------------------------------------------------------------------
+' -- src/lispmax_repl.bmx
+' --
+' -- A very basic REPL for lispmax interaction.
+' --
+' -- This file is part of sodaware.mod (https://www.sodaware.net/sodaware.mod/)
+' -- Copyright (c) 2009-2017 Phil Newton
+' --
+' -- See LICENSE for full license information.
+' ------------------------------------------------------------------------------
+
+
 SuperStrict
 
 Import sodaware.Console_Color
@@ -5,37 +17,37 @@ Import sodaware.Console_Color
 Import "lispmax_core.bmx"
 
 Type Lispmax_REPL
-	
+
 	Field _lisp:LispMax
-	
+
 	Method addFunction(name:String, fn:LispMax_Atom)
 		Self.getEnvironment().set(Self.getLisp().makeSymbol(name), fn)
 	End Method
-	
+
 	Method getLisp:LispMax()
 		Return Self._lisp
 	End Method
-	
+
 	Method getEnvironment:LispMax_Environment()
 		Return Self._lisp._environment
 	End Method
-	
+
 	Method run()
-	
+
 		Local content:String
-			
+
 		' REPL
 		Repeat
-			
+
 			content = Input("> ")
 			If content = "exit" Then End
-			
+
 			content = content + "~0"
-			
+
 			?Not Debug
 			Try
 				Local expression:LispMax_Atom = Self._lisp.parseExpression(content)
-				WriteC "=> " 
+				WriteC "=> "
 				Self._lisp.printExpression( Self._lisp.evaluateExpression(expression, Self._lisp._environment))
 				WriteC "~n"
 			Catch e:Lispmax_SyntaxErrorException
@@ -49,18 +61,18 @@ Type Lispmax_REPL
 			End Try
 			?Debug
 				Local expression:LispMax_Atom = Self._lisp.parseExpression(content)
-				WriteC "=> " 
+				WriteC "=> "
 				Self._lisp.printExpression( Self._lisp.evaluateExpression(expression, Self._lisp._environment))
-				WriteC "~n"			
+				WriteC "~n"
 			?
-		
+
 		Until content = ""
-		
+
 	End Method
-	
+
 	Method New()
 		Self._lisp	= New LispMax
 		Self._lisp.initializeEnvironment()
 	End Method
-	
+
 End Type
