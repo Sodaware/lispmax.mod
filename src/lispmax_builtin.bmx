@@ -7,10 +7,10 @@
 ' -- A lot of these functions access internals directly to keep them as fast as
 ' -- possible. They're quite ugly and brittle.
 ' --
-' -- This file is part of sodaware.mod (https://www.sodaware.net/sodaware.mod/)
-' -- Copyright (c) 2009-2019 Phil Newton
+' -- This file is part of lispmax (https://www.sodaware.net/lispmax/)
+' -- Copyright (c) 2017-2019 Phil Newton
 ' --
-' -- See LICENSE for full license information.
+' -- See COPYING for full license information.
 ' ------------------------------------------------------------------------------
 
 

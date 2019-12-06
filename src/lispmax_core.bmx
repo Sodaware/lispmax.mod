@@ -4,10 +4,10 @@
 ' -- The core of lispmax. Contains the main LispMax type which contains a lisp
 ' -- environment, execution stack and a symbol table.
 ' --
-' -- This file is part of sodaware.mod (https://www.sodaware.net/sodaware.mod/)
-' -- Copyright (c) 2009-2017 Phil Newton
+' -- This file is part of lispmax (https://www.sodaware.net/lispmax/)
+' -- Copyright (c) 2017-2019 Phil Newton
 ' --
-' -- See LICENSE for full license information.
+' -- See COPYING for full license information.
 ' ------------------------------------------------------------------------------
 
 

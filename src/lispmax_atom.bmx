@@ -4,10 +4,10 @@
 ' -- Atoms are the building blocks for all Lisp expressions. An atom can be a
 ' -- number of things, such as a string, symbol or integer.
 ' --
-' -- This file is part of sodaware.mod (https://www.sodaware.net/sodaware.mod/)
-' -- Copyright (c) 2009-2017 Phil Newton
+' -- This file is part of lispmax (https://www.sodaware.net/lispmax/)
+' -- Copyright (c) 2017-2019 Phil Newton
 ' --
-' -- See LICENSE for full license information.
+' -- See COPYING for full license information.
 ' ------------------------------------------------------------------------------
 
 
