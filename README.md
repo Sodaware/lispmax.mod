@@ -125,7 +125,7 @@ See `sitelisp/library.lisp` for a complete list of library functions.
 
 ## Licence
 
-Copyright (C) 2009-2019 Phil Newton
+Copyright (C) 2017-2019 Phil Newton
 
 LISPMAX is free software: you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the Free
