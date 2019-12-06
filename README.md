@@ -34,7 +34,7 @@ Framework brl.basic
 Import sodaware.lispmax
 
 ' Create a new LispMax instance.
-Local lisp:LispMax  = New LispMax
+Local lisp:LispMax = New LispMax
 
 ' Load built-in and library functions.
 lisp.initializeEnvironment()
@@ -116,12 +116,19 @@ application to be recompiled.
 
 Evaluate the following code from within the LispMax environment.
 
-```lisp
+```scheme
 (define (my-function)
   "Hello, World")
 ```
 
-See `sitelisp/library.lisp` for a complete list of library functions.
+Alternatively, functions can be added using a more lispy syntax:
+
+```lisp
+(defun my-function ()
+  "Always returns the string Hello World"
+  "Hello, World")
+```
+
 
 ## Licence
 
