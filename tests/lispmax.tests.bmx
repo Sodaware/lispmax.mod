@@ -15,8 +15,8 @@ Type Sodaware_Lispmax_Tests Extends LispMax_BaseTest
 	' ----------------------------------------------------------------------
 
 	Method testCanUseFloatingPoint() { test }
-		Self.assertEqualsL(0.1, Self.runExpression("0.1").value_number)
-		Self.assertEqualsL(0.5, Self.runExpression("(+ 0.25 0.25)").value_number)
+		Self.assertEqualsF(0.1, Self.runExpression("0.1").value_number)
+		Self.assertEqualsF(0.5, Self.runExpression("(+ 0.25 0.25)").value_number)
 	End Method
 
 	Method testSymbolsAreNotCaseSensitive() { test }
