@@ -11,6 +11,19 @@ Now your BlitzMax applications can have one too!
 language.
 
 
+## Installation
+
+lispmax depends on a couple of sub-modules from
+[sodaware.mod](https://www.sodaware.net/sodaware.mod/).
+
+Once sodaware.mod is installed, navigate to the `sodaware.mod` folder and clone
+the `lispmax.mod` repository.
+
+```bash
+cd /path/to/blitzmax/mod/sodaware.mod/
+git clone https://github.com/sodaware/lispmax.mod.git
+```
+
 ## A quick example
 
 The following lisp expression adds two numbers together:
