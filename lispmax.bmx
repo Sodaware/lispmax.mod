@@ -23,9 +23,9 @@
 ' ------------------------------------------------------------------------------
 
 
-Module sodaware.lispmax
-
 SuperStrict
+
+Module sodaware.lispmax
 
 ' Import core files
 Import "src/lispmax_lexer.bmx"
