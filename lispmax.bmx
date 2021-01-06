@@ -31,7 +31,6 @@ SuperStrict
 Import "src/lispmax_lexer.bmx"
 Import "src/lispmax_exceptions.bmx"
 Import "src/lispmax_core.bmx"
-Import "src/lispmax_repl.bmx"
 
 ' Include lisp library code
 Incbin "site-lisp/library.lisp"
