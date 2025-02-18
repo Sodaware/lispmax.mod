@@ -10,6 +10,12 @@
 ' ------------------------------------------------------------------------------
 
 
+''' <summary>
+''' A LispMax object that can be paused and resumed.
+'''
+''' Execution is limited to a set amount of milliseconds before being paused Until
+''' `execute` is called again. This is usually run inside a game loop.
+''' </summary>
 Type LispMax_Process Extends LispMax
 
 	Global NextProcessId:Int = 1
@@ -40,7 +46,7 @@ Type LispMax_Process Extends LispMax
 	''' <summary>Check if the current script process is sleeping.</summary>
 	''' <return>True if process is sleeping, false if not.</return>
 	Method isSleeping:Byte()
-		Return self._isSleeping
+		Return Self._isSleeping
 	End Method
 
 	''' <summary>Get the process's ID</summary>
@@ -54,25 +60,24 @@ Type LispMax_Process Extends LispMax
 	' ----------------------------------------------------------------------
 
 	''' <summary>
-	''' Execute the process. Executes any commands on the stack with a maximum
-	'''  duration of TIMEOUT milliseconds.
+	''' Execute the process.
+	'''
+	''' Executes any commands on the stack with a maximum duration of TIMEOUT milliseconds.
 	''' </summary>
 	''' <param name="timeout">The maximum number of milliseconds to execute the process.</param>
 	Method execute(timeout:Float = 10)
-
 		Local elapsed:Float  = 0
 		Local previous:Float = MilliSecs()
 
 		' Check if sleeping
-		if self._isSleeping then
+		If Self._isSleeping then
 
 			' Do nothing if still sleeping
-			if previous < self._sleepUntil then return
+			If previous < Self._sleepUntil Then Return
 
 			' Unsleep
-			self._isSleeping = False
-			self._sleepUntil = 0
-
+			Self._isSleeping = False
+			Self._sleepUntil = 0
 		End If
 
 		While elapsed < timeout And Self.isRunning() And Not(Self.isFinished()) and not(self.isSleeping())
@@ -84,7 +89,6 @@ Type LispMax_Process Extends LispMax
 			previous = MilliSecs()
 
 		Wend
-
 	End Method
 
 
@@ -117,8 +121,9 @@ Type LispMax_Process Extends LispMax
 	''' <return>The time at which the process will resume.</return>
 	Method sleepFor:int(time:Int)
 		Self._isSleeping = true
-		self._sleepUntil = MilliSecs() + time
-		return self._sleepUntil
+		Self._sleepUntil = MilliSecs() + time
+
+		Return Self._sleepUntil
 	End Method
 
 
@@ -131,8 +136,8 @@ Type LispMax_Process Extends LispMax
 		Local this:LispMax_Process = New LispMax_Process
 
 		If parent <> Null Then
-			this._environment   = LispMax_Environment.Create(parent._environment)
-			this.symbolTable	= parent.symbolTable
+			this._environment = LispMax_Environment.Create(parent._environment)
+			this._symbolTable = parent._symbolTable
 		EndIf
 
 		' Assign a process ID
