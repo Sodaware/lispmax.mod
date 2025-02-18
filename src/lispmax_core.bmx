@@ -830,13 +830,17 @@ Type LispMax
 	''' Initialises the lexer with the contents of a string and returns the
 	''' first expression as an atom.
 	''' </summary>
-	Method parseExpression:LispMax_Atom(source:String)
+	Method parseExpression:LispMax_Atom(source:String, lexer:LispMax_Lexer = null)
 
-		' Check source is null terminated
+		' Ensure source is null terminated.
 		If source.endswith("~0") = False Then source :+ "~0"
 
 		' Create the lexer
-		Self._lexer = LispMax_Lexer.Create(source)
+		If lexer Then
+			Self._lexer = lexer
+		Else
+			Self._lexer = LispMax_Lexer.Create(source)
+		EndIf
 
 		' Read the first expression
 		Return Self.readExpression()
