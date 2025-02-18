@@ -32,6 +32,11 @@ Include "lispmax_builtin.bmx"
 Global LispMax_Nil:LispMax_Atom
 
 
+''' <summary>
+''' The core type for executing LispMax code.
+'''
+''' Contains a complete LispMax environment, execution stack, and symbol table.
+''' <summary>
 Type LispMax
 	Field _environment:LispMax_Environment  '< The environment expressions are being evaluated in.
 	Field _expression:LispMax_Atom          '< The current expression being evaluated.
@@ -39,7 +44,7 @@ Type LispMax
 	Field _result:LispMax_Atom              '< Result from the last evaluated expression.
 
 	Field _lexer:LispMax_Lexer              '< The internal lexer for lexing lisp expressions.
-	Field symbolTable:LispMax_AtomMap       '< The internal symbol table.
+	Field _symbolTable:LispMax_AtomMap      '< The internal symbol table.
 
 	' Arg reader states.
 	Const ARG_STATE_NORMAL:Byte = 1         '< Standard arg reading.
@@ -1134,7 +1139,7 @@ Type LispMax
 		name = name.toUpper()
 
 		' Check the symbol table first.
-		Local symbol:LispMax_Atom = Self.symbolTable.get(name)
+		Local symbol:LispMax_Atom = Self._symbolTable.get(name)
 
 		If symbol = Null Then
 			' Not found - create a new one.
@@ -1143,7 +1148,7 @@ Type LispMax
 			symbol.value_symbol = name
 
 			' Add to the symbol table.
-			Self.symbolTable.set(name, symbol)
+			Self._symbolTable.set(name, symbol)
 		End If
 
 		Return symbol
@@ -1565,7 +1570,7 @@ Type LispMax
 			Lispmax_Nil.value_symbol = "NIL"
 		End If
 
-		self.symbolTable = New LispMax_AtomMap
+		Self._symbolTable = New LispMax_AtomMap
 	End Method
 
 End Type
