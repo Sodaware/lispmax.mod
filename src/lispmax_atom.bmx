@@ -193,6 +193,21 @@ Type LispMax_Atom
 		Self.value_pair.atom[1] = Null
 	End Method
 
+	''' <summary>Reset the atom to its initial state.</summary>
+	Method reset()
+		' Clear values/types.
+		Self.atom_type      = 0
+		Self.value_symbol   = ""
+		Self.value_number   = 0
+		Self.value_builtin  = Null
+		Self.special_symbol = 0
+		Self._environment   = Null
+
+		' Clear the pair data.
+		Self.value_pair.atom[0] = Null
+		Self.value_pair.atom[1] = Null
+	End Method
+
 End Type
 
 
