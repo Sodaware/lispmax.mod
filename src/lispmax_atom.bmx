@@ -51,6 +51,9 @@ Type LispMax_Atom
 	Field value_number:Long
 	Field value_builtin:Lispmax_Callable
 
+	' Pool support.
+	Field _next:LispMax_Atom
+
 	' Internal environment - only used by Callable types
 	' TODO: Can we move this to the callable type instead?
 	Field _environment:LispMax_Environment
