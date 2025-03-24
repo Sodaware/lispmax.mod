@@ -286,7 +286,11 @@ Function LispMax_Builtin_Rand:LispMax_Atom(lisp:LispMax, args:LispMax_Atom)
 		Throw New Lispmax_UnexpectedTypeException
 	End If
 
+	?not bmxng
 	Return lisp.makeNumber(Rand(a.value_number, b.value_number))
+	?bmxng
+	Return lisp.makeNumber(Rand(Int(a.value_number), Int(b.value_number)))
+	?
 
 End Function
 
