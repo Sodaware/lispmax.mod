@@ -803,8 +803,13 @@ Type LispMax
 
 		' Ensure bank finishes with a 0 byte.
 		' This prevents the string from having junk bytes at the end.
+		?not bmxng
 		ResizeBank(bank, size + 1)
 		PokeByte(bank, size - 1, 0)
+		?bmxng
+		ResizeBank(bank, size_t(size + 1))
+		PokeByte(bank, size - 1, 0)
+		?
 
 		' Get buffer contents.
 		Local content:String  = ""
